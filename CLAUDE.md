@@ -31,6 +31,11 @@ GET /gtfs/route/:routeId -> returns trips on the route `gtfsparser.GTFS.RouteTri
 GET /gtfs/trip/:tripId -> returns stopTimes on the trip `gtfsparser.GTFS.TripStopTimes`. also returns the frequencies from `gtfsparser.GTFS.FrequenciesByTrip`
 
 
+## Front End Viewer
+
+Mapboxgl is used to visualise the GTFS on a map, and tailwind css is used to style the front-end.
+
+
 ## Building the App
 
 To build the app, first we must run `npm run build` on the `./viewer`. This generates the static assets. Then we'll embed into our go programme. For development, we do not need to do this as we can run 2 separate servers one for go and one for the vite svelte.

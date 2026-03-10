@@ -17,5 +17,10 @@
     "svelte-check": "^4.3.4",
     "typescript": "~5.9.3",
     "vite": "^7.3.1"
+  },
+  "dependencies": {
+    "@tailwindcss/vite": "^4.2.1",
+    "mapbox-gl": "^3.19.1",
+    "tailwindcss": "^4.2.1"
   }
 }
