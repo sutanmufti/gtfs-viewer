@@ -1,0 +1,426 @@
+package main
+
+import (
+	"fmt"
+	"net/http"
+	"os"
+	"strconv"
+
+	"github.com/gin-gonic/gin"
+	gtfsparser "github.com/sutanmufti/gtfs-parser"
+)
+
+const pageSize = 10
+const uploadDir = "./uploads"
+
+func Ping(c *gin.Context) {
+	c.JSON(http.StatusOK, gin.H{"message": "pong"})
+}
+
+// getGTFS retrieves a GTFS instance from the store by name (query param "gtfs").
+func getGTFS(c *gin.Context) (*gtfsparser.GTFS, bool) {
+	name := c.Query("gtfs")
+	if name == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "missing 'gtfs' query parameter"})
+		return nil, false
+	}
+	storeMu.RLock()
+	g, ok := store[name]
+	storeMu.RUnlock()
+	if !ok {
+		c.JSON(http.StatusNotFound, gin.H{"error": fmt.Sprintf("GTFS '%s' not found", name)})
+		return nil, false
+	}
+	return g, true
+}
+
+// ListGTFS handles GET /gtfs/ — returns the names of all loaded GTFS feeds.
+func ListGTFS(c *gin.Context) {
+	storeMu.RLock()
+	names := make([]string, 0, len(store))
+	for k := range store {
+		names = append(names, k)
+	}
+	storeMu.RUnlock()
+	c.JSON(http.StatusOK, gin.H{"gtfs": names})
+}
+
+// UploadGTFS handles POST /gtfs/upload — saves, parses, and stores a GTFS zip.
+func UploadGTFS(c *gin.Context) {
+	file, header, err := c.Request.FormFile("file")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "missing 'file' form field"})
+		return
+	}
+	defer file.Close()
+
+	if err := os.MkdirAll(uploadDir, 0755); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not create upload directory"})
+		return
+	}
+
+	destPath := uploadDir + "/" + header.Filename
+	dest, err := os.Create(destPath)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not save file"})
+		return
+	}
+	defer dest.Close()
+
+	buf := make([]byte, 32*1024)
+	for {
+		n, readErr := file.Read(buf)
+		if n > 0 {
+			if _, writeErr := dest.Write(buf[:n]); writeErr != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "error writing file"})
+				return
+			}
+		}
+		if readErr != nil {
+			break
+		}
+	}
+	dest.Close()
+
+	g := &gtfsparser.GTFS{FileName: destPath}
+	if err := g.ParseAll(); err != nil {
+		os.Remove(destPath)
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if c.Query("validate") == "true" {
+		if validationErrs := g.ValidateAll(); len(validationErrs) > 0 {
+			os.Remove(destPath)
+			c.JSON(http.StatusBadRequest, gin.H{"error": "validation failed", "details": validationErrs})
+			return
+		}
+	}
+
+	g.Compile()
+
+	storeMu.Lock()
+	store[header.Filename] = g
+	storeMu.Unlock()
+
+	c.JSON(http.StatusOK, gin.H{"message": "uploaded", "name": header.Filename})
+}
+
+// paginate returns a single page of an interface slice.
+func paginate(total int, page int) (offset, limit int) {
+	if page < 1 {
+		page = 1
+	}
+	offset = (page - 1) * pageSize
+	if offset >= total {
+		return offset, 0
+	}
+	limit = pageSize
+	if offset+limit > total {
+		limit = total - offset
+	}
+	return offset, limit
+}
+
+// stopToFeature converts a Stop to a GeoJSON Feature.
+func stopToFeature(s gtfsparser.Stop) map[string]any {
+	var coords [2]float64
+	if s.StopLon != nil && s.StopLat != nil {
+		coords[0] = *s.StopLon
+		coords[1] = *s.StopLat
+	}
+	return map[string]any{
+		"type": "Feature",
+		"geometry": map[string]any{
+			"type":        "Point",
+			"coordinates": coords,
+		},
+		"properties": map[string]any{
+			"stop_id":   s.StopID,
+			"stop_name": s.StopName,
+			"stop_code": s.StopCode,
+			"stop_desc": s.StopDesc,
+		},
+	}
+}
+
+// GetGTFSFile handles GET /gtfs/files/:fileName — returns paginated file content.
+// For "stops", content is returned as GeoJSON.
+func GetGTFSFile(c *gin.Context) {
+	g, ok := getGTFS(c)
+	if !ok {
+		return
+	}
+
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	fileName := c.Param("fileName")
+
+	switch fileName {
+	case "stops":
+		stops := g.StopData
+		offset, limit := paginate(len(stops), page)
+		features := make([]map[string]any, 0, limit)
+		for i := offset; i < offset+limit; i++ {
+			features = append(features, stopToFeature(stops[i]))
+		}
+		c.JSON(http.StatusOK, gin.H{
+			"type":     "FeatureCollection",
+			"features": features,
+			"page":     page,
+			"total":    len(stops),
+		})
+
+	case "routes":
+		routes := g.RouteData
+		offset, limit := paginate(len(routes), page)
+		c.JSON(http.StatusOK, gin.H{"data": routes[offset : offset+limit], "page": page, "total": len(routes)})
+
+	case "trips":
+		trips := g.TripData
+		offset, limit := paginate(len(trips), page)
+		c.JSON(http.StatusOK, gin.H{"data": trips[offset : offset+limit], "page": page, "total": len(trips)})
+
+	case "agency":
+		agencies := g.AgencyData
+		offset, limit := paginate(len(agencies), page)
+		c.JSON(http.StatusOK, gin.H{"data": agencies[offset : offset+limit], "page": page, "total": len(agencies)})
+
+	case "calendar":
+		calendars := g.CalendarData
+		offset, limit := paginate(len(calendars), page)
+		c.JSON(http.StatusOK, gin.H{"data": calendars[offset : offset+limit], "page": page, "total": len(calendars)})
+
+	case "calendar_dates":
+		dates := g.CalendarDates
+		offset, limit := paginate(len(dates), page)
+		c.JSON(http.StatusOK, gin.H{"data": dates[offset : offset+limit], "page": page, "total": len(dates)})
+
+	case "shapes":
+		shapes := g.ShapeData
+		offset, limit := paginate(len(shapes), page)
+		c.JSON(http.StatusOK, gin.H{"data": shapes[offset : offset+limit], "page": page, "total": len(shapes)})
+
+	case "frequencies":
+		freqs := g.FrequencyData
+		offset, limit := paginate(len(freqs), page)
+		c.JSON(http.StatusOK, gin.H{"data": freqs[offset : offset+limit], "page": page, "total": len(freqs)})
+
+	case "transfers":
+		transfers := g.TransferData
+		offset, limit := paginate(len(transfers), page)
+		c.JSON(http.StatusOK, gin.H{"data": transfers[offset : offset+limit], "page": page, "total": len(transfers)})
+
+	case "fare_attributes":
+		fa := g.FareAttributes
+		offset, limit := paginate(len(fa), page)
+		c.JSON(http.StatusOK, gin.H{"data": fa[offset : offset+limit], "page": page, "total": len(fa)})
+
+	case "fare_rules":
+		fr := g.FareRules
+		offset, limit := paginate(len(fr), page)
+		c.JSON(http.StatusOK, gin.H{"data": fr[offset : offset+limit], "page": page, "total": len(fr)})
+
+	case "feed_info":
+		fi := g.FeedInfo
+		offset, limit := paginate(len(fi), page)
+		c.JSON(http.StatusOK, gin.H{"data": fi[offset : offset+limit], "page": page, "total": len(fi)})
+
+	case "pathways":
+		pw := g.PathwayData
+		offset, limit := paginate(len(pw), page)
+		c.JSON(http.StatusOK, gin.H{"data": pw[offset : offset+limit], "page": page, "total": len(pw)})
+
+	case "levels":
+		lv := g.LevelData
+		offset, limit := paginate(len(lv), page)
+		c.JSON(http.StatusOK, gin.H{"data": lv[offset : offset+limit], "page": page, "total": len(lv)})
+
+	case "attributions":
+		attr := g.Attributions
+		offset, limit := paginate(len(attr), page)
+		c.JSON(http.StatusOK, gin.H{"data": attr[offset : offset+limit], "page": page, "total": len(attr)})
+
+	case "translations":
+		tr := g.Translations
+		offset, limit := paginate(len(tr), page)
+		c.JSON(http.StatusOK, gin.H{"data": tr[offset : offset+limit], "page": page, "total": len(tr)})
+
+	default:
+		c.JSON(http.StatusNotFound, gin.H{"error": fmt.Sprintf("unknown file '%s'", fileName)})
+	}
+}
+
+// GetGTFSFileRecord handles GET /gtfs/files/:fileName/:id — returns a single record.
+func GetGTFSFileRecord(c *gin.Context) {
+	g, ok := getGTFS(c)
+	if !ok {
+		return
+	}
+
+	fileName := c.Param("fileName")
+	id := c.Param("id")
+
+	switch fileName {
+	case "stops":
+		for _, s := range g.StopData {
+			if s.StopID == id {
+				c.JSON(http.StatusOK, s)
+				return
+			}
+		}
+	case "routes":
+		for _, r := range g.RouteData {
+			if r.RouteID == id {
+				c.JSON(http.StatusOK, r)
+				return
+			}
+		}
+	case "trips":
+		for _, t := range g.TripData {
+			if t.TripID == id {
+				c.JSON(http.StatusOK, t)
+				return
+			}
+		}
+	case "agency":
+		for _, a := range g.AgencyData {
+			if a.AgencyID == id {
+				c.JSON(http.StatusOK, a)
+				return
+			}
+		}
+	default:
+		c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("file '%s' does not support record lookup by ID", fileName)})
+		return
+	}
+
+	c.JSON(http.StatusNotFound, gin.H{"error": fmt.Sprintf("record '%s' not found in '%s'", id, fileName)})
+}
+
+// GetStops handles GET /gtfs/files/stops — returns all stops as a GeoJSON FeatureCollection.
+func GetStops(c *gin.Context) {
+	g, ok := getGTFS(c)
+	if !ok {
+		return
+	}
+
+	features := make([]map[string]any, 0, len(g.StopData))
+	for _, s := range g.StopData {
+		features = append(features, stopToFeature(s))
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"type":     "FeatureCollection",
+		"features": features,
+	})
+}
+
+// GetStop handles GET /gtfs/stop/:stopId — returns routes that serve the stop,
+// including routes reachable via transfers.
+func GetStop(c *gin.Context) {
+	g, ok := getGTFS(c)
+	if !ok {
+		return
+	}
+
+	stopID := c.Param("stopId")
+
+	// Find the *Stop pointer.
+	var stopPtr *gtfsparser.Stop
+	for i := range g.StopData {
+		if g.StopData[i].StopID == stopID {
+			stopPtr = &g.StopData[i]
+			break
+		}
+	}
+	if stopPtr == nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": fmt.Sprintf("stop '%s' not found", stopID)})
+		return
+	}
+
+	// Collect routes for this stop.
+	routeSet := make(map[string]*gtfsparser.Route)
+	for _, r := range g.StopRoutes[stopPtr] {
+		routeSet[r.RouteID] = r
+	}
+
+	// Collect routes from transfer stops.
+	transfers := g.TransfersFromStop[stopPtr]
+	transferStops := make([]gtfsparser.Stop, 0)
+	for _, tr := range transfers {
+		if tr.ToStopID != nil {
+			transferStops = append(transferStops, *tr.ToStopID)
+			for _, r := range g.StopRoutes[tr.ToStopID] {
+				routeSet[r.RouteID] = r
+			}
+		}
+	}
+
+	routes := make([]*gtfsparser.Route, 0, len(routeSet))
+	for _, r := range routeSet {
+		routes = append(routes, r)
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"stop":           stopPtr,
+		"routes":         routes,
+		"transfers":      transfers,
+		"transfer_stops": transferStops,
+	})
+}
+
+// GetRoute handles GET /gtfs/route/:routeId — returns trips on the route.
+func GetRoute(c *gin.Context) {
+	g, ok := getGTFS(c)
+	if !ok {
+		return
+	}
+
+	routeID := c.Param("routeId")
+
+	var routePtr *gtfsparser.Route
+	for i := range g.RouteData {
+		if g.RouteData[i].RouteID == routeID {
+			routePtr = &g.RouteData[i]
+			break
+		}
+	}
+	if routePtr == nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": fmt.Sprintf("route '%s' not found", routeID)})
+		return
+	}
+
+	trips := g.RouteTrips[routePtr]
+	c.JSON(http.StatusOK, gin.H{"route": routePtr, "trips": trips})
+}
+
+// GetTrip handles GET /gtfs/trip/:tripId — returns stop times and frequencies for the trip.
+func GetTrip(c *gin.Context) {
+	g, ok := getGTFS(c)
+	if !ok {
+		return
+	}
+
+	tripID := c.Param("tripId")
+
+	var tripPtr *gtfsparser.Trip
+	for i := range g.TripData {
+		if g.TripData[i].TripID == tripID {
+			tripPtr = &g.TripData[i]
+			break
+		}
+	}
+	if tripPtr == nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": fmt.Sprintf("trip '%s' not found", tripID)})
+		return
+	}
+
+	stopTimes := g.TripStopTimes[tripPtr]
+	frequencies := g.FrequenciesByTrip[tripPtr]
+
+	c.JSON(http.StatusOK, gin.H{
+		"trip":        tripPtr,
+		"stop_times":  stopTimes,
+		"frequencies": frequencies,
+	})
+}
