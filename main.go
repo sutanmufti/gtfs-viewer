@@ -12,6 +12,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	gtfsparser "github.com/sutanmufti/gtfs-parser"
 )
@@ -45,6 +46,19 @@ func main() {
 	}
 
 	r := gin.Default()
+	r.Use(cors.Default())
+
+	// Trust X-Forwarded-* headers from proxies.
+	// TRUSTED_PROXIES is a comma-separated list of CIDRs/IPs.
+	// Defaults to loopback and private network ranges.
+	trustedProxies := os.Getenv("TRUSTED_PROXIES")
+	if trustedProxies == "" {
+		trustedProxies = "127.0.0.1,::1,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16"
+	}
+	if err := r.SetTrustedProxies(strings.Split(trustedProxies, ",")); err != nil {
+		log.Fatalf("invalid TRUSTED_PROXIES: %v", err)
+	}
+	r.ForwardedByClientIP = true
 
 	// Serve embedded frontend at /.
 	sub, err := fs.Sub(distFS, "viewer/dist")
