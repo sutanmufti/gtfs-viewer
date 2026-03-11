@@ -3,7 +3,7 @@
 A Go/Gin web application for visualising [GTFS](https://gtfs.org/) (General Transit Feed Specification) data on an interactive map.
 
 
-# Verison 1.0.0
+# Version 1.0.0
 
 First release
 
@@ -19,8 +19,8 @@ First release
 
 ## Requirements
 
-- Go 1.21+
-- Node.js 18+ (for building the frontend)
+- Go 1.25+
+- Node.js 24+ (for building the frontend)
 - A [Mapbox](https://mapbox.com/) access token
 
 ## Mapbox API Key
@@ -40,7 +40,17 @@ The Mapbox access token can be provided in two ways, in order of precedence:
 
 ## Building
 
-### 1. Build the frontend
+### Quick build (all platforms)
+
+```sh
+bash build.sh
+```
+
+This builds the frontend and cross-compiles Go binaries for Linux, macOS, and Windows (amd64 + arm64) into `./dist/`.
+
+### Manual build
+
+#### 1. Build the frontend
 
 ```sh
 cd viewer
@@ -51,7 +61,7 @@ cd ..
 
 This produces `viewer/dist/`, which is embedded into the Go binary at compile time.
 
-### 2. Build the Go binary
+#### 2. Build the Go binary
 
 ```sh
 go build -o gtfs-viewer .
