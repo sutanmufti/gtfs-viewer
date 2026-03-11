@@ -67,11 +67,13 @@ export async function selectGtfs(name: string) {
 
   if (appstate.map) {
     loadStopsOnMap()
+    loadTripStoptimesOnMap()
   } else {
     const interval = setInterval(() => {
       if (appstate.map) {
         clearInterval(interval)
         loadStopsOnMap()
+        loadTripStoptimesOnMap()
       }
     }, 200)
   }
