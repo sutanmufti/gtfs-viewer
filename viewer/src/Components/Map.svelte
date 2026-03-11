@@ -4,6 +4,7 @@
   import { onMount, mount } from 'svelte'
   import 'mapbox-gl/dist/mapbox-gl.css'
   import PopupTrip from './PopupTrip.svelte'
+  import PopupStop from './PopupStop.svelte';
 
   const envApiKey = import.meta.env.VITE_MAPBOX_KEY
 
@@ -30,7 +31,7 @@
       })
 
       // Popup on stop click.
-      appstate.map!.on('click', 'gtfs-stops-layer', (e) => {
+      appstate.map!.on('click', 'gtfs-trips-layer', (e) => {
         const feature = e.features?.[0]
         if (!feature) return
         const props = feature.properties as Record<string, string>
@@ -61,22 +62,29 @@
         appstate.map!.getCanvas().style.cursor = ''
       })
 
-      // Popup on trip line click.
-      appstate.map!.on('click', 'gtfs-trips-layer', (e) => {
+      appstate.map!.on('click', 'gtfs-stops-layer', (e) => {
         const feature = e.features?.[0]
         if (!feature) return
         const props = feature.properties as Record<string, string>
-        const coords = e.lngLat
+        const coords = (feature.geometry as GeoJSON.Point).coordinates as [number, number]
+
+        const div = document.createElement('div')
+        mount(PopupStop, {
+          target: div,
+          props: {
+            stop_id:       props.stop_id,
+            stop_name:     props.stop_name,
+            stop_code:     props.stop_code,
+            stop_desc:     props.stop_desc,
+            ParentStation: props.ParentStation ?? '',
+          },
+        })
         new mapboxgl.Popup()
           .setLngLat(coords)
-          .setHTML(
-            `<strong>${props.route_short_name || props.route_id}</strong>` +
-            (props.route_long_name ? `<br/>${props.route_long_name}` : '') +
-            (props.headsign ? `<br/>→ ${props.headsign}` : '') +
-            `<br/><span style="font-size:0.75em;color:#666">${props.trip_id}</span>`
-          )
+          .setDOMContent(div)
           .addTo(appstate.map!)
       })
+
     })
   })
 </script>
