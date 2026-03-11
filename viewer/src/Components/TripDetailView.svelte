@@ -79,6 +79,7 @@
   })
 
   onDestroy(() => {
+    clearActiveStop()
     // If returning to stop view, showRoutes() will re-apply the correct filters.
     // Only clear filters when going back to the default view.
     if (!appstate.stopShowRoute) {
@@ -90,9 +91,10 @@
   })
 
   function back() {
+    const lastStopId = appstate.lastStopId as string
     appstate.viewTrip = undefined
-    if (appstate.stopShowRoute && appstate.lastStopId) {
-      showRoutes(appstate.lastStopId)
+    if (appstate.stopShowRoute && lastStopId) {
+      showRoutes(lastStopId)
     }
   }
 

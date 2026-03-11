@@ -15,6 +15,30 @@
   function routeColor(r: Route) {
     return r.RouteColor ? `#${r.RouteColor}` : '#94a3b8'
   }
+
+  let activeFeatureId = $state<number | null>(null)
+
+  function setActiveTrip(tripId: string) {
+    const map = appstate.map
+    if (!map) return
+    if (activeFeatureId !== null) {
+      map.removeFeatureState({ source: 'gtfs-trips', id: activeFeatureId }, 'active')
+    }
+    const features = map.querySourceFeatures('gtfs-trips', {
+      filter: ['==', ['get', 'trip_id'], tripId],
+    })
+    if (features.length > 0 && features[0].id !== undefined) {
+      activeFeatureId = features[0].id as number
+      map.setFeatureState({ source: 'gtfs-trips', id: activeFeatureId }, { active: true })
+    }
+  }
+
+  function clearActiveTrip() {
+    const map = appstate.map
+    if (!map || activeFeatureId === null) return
+    map.removeFeatureState({ source: 'gtfs-trips', id: activeFeatureId }, 'active')
+    activeFeatureId = null
+  }
 </script>
 
 <div class="col-span-1 flex flex-col overflow-hidden border-r border-gray-200 bg-gray-50">
@@ -45,7 +69,12 @@
 
         <!-- Trip list -->
         {#each result.trips as trip}
-          <div class="flex items-center gap-2 px-4 py-1.5 hover:bg-gray-100 text-xs">
+          <div
+            role="listitem"
+            class="flex items-center gap-2 px-4 py-1.5 hover:bg-gray-100 text-xs"
+            onmouseenter={() => setActiveTrip(trip.TripID)}
+            onmouseleave={clearActiveTrip}
+          >
             <div class="flex-1 min-w-0">
               <span class="text-gray-700 truncate block">
                 {trip.TripHeadsign || trip.TripID}

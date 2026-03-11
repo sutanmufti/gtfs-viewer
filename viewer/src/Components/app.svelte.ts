@@ -34,6 +34,7 @@ export const appstate: {
   routeResults?: any[]
 
   viewTrip?: string
+  
   lastStopId?: string
 } = $state({
   stopShowRoute: false,
