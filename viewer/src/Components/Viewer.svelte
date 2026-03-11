@@ -1,5 +1,23 @@
 <script lang="ts">
   import { appstate, loadViewerPage, switchLayer } from './app.svelte'
+  import * as turf from '@turf/turf'
+
+  async function onRowClick(row: Record<string, unknown>) {
+    appstate.activeRecord = row
+
+    if (appstate.selectedFile === 'trips' && appstate.map && appstate.selectedGtfs) {
+      const tripId = row['TripID'] as string
+      if (!tripId) return
+      const res = await fetch(`/gtfs/trip/${encodeURIComponent(tripId)}?gtfs=${encodeURIComponent(appstate.selectedGtfs)}&geojson=true`)
+      const feature = await res.json()
+      if (feature?.geometry?.coordinates?.length < 2) return
+      const [minLng, minLat, maxLng, maxLat] = turf.bbox(feature)
+      appstate.map.fitBounds([[minLng, minLat], [maxLng, maxLat]], { padding: 60 })
+      if (appstate.map.getLayer('gtfs-trips-layer')) {
+        appstate.map.setFilter('gtfs-trips-layer', ['==', ['get', 'trip_id'], tripId])
+      }
+    }
+  }
 
   let showStops = $state(true)
   let showTrips = $state(true)
@@ -78,7 +96,7 @@
           {#each pagedViewerData as row, i}
             <tr
               class="{i % 2 === 0 ? 'bg-white' : 'bg-gray-50'} hover:bg-blue-50 cursor-pointer"
-              onclick={() => appstate.activeRecord = row}
+              onclick={() => onRowClick(row)}
             >
               {#each columns as col}
                 <td class="px-3 py-1.5 border-b border-gray-100 whitespace-nowrap text-gray-700 max-w-50 truncate">

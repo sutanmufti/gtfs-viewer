@@ -3,6 +3,9 @@
 
   function back() {
     appstate.activeRecord = undefined
+    if (appstate.map?.getLayer('gtfs-trips-layer')) {
+      appstate.map.setFilter('gtfs-trips-layer', null)
+    }
   }
 
   // Format a value for display: primitives inline, objects as indented JSON.
