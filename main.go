@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"os"
 	"path/filepath"
 	"sync"
 
@@ -58,5 +59,10 @@ func main() {
 		gtfs.GET("/trip", TripGeojson)
 	}
 
-	r.Run()
+	host := os.Getenv("HOST")
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+	r.Run(host + ":" + port)
 }
