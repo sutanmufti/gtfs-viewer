@@ -99,3 +99,42 @@ export async function loadStopsOnMap() {
     }
   }
 }
+
+export async function loadTripStoptimesOnMap() {
+  const map = appstate.map
+  if (!map || !appstate.selectedGtfs) return
+
+  const res = await fetch(`/gtfs/trip?gtfs=${encodeURIComponent(appstate.selectedGtfs)}`)
+  const geojson = await res.json()
+
+  const SOURCE_ID = 'gtfs-trips'
+  const LAYER_ID = 'gtfs-trips-layer'
+
+  if (map.getSource(SOURCE_ID)) {
+    ;(map.getSource(SOURCE_ID) as mapboxgl.GeoJSONSource).setData(geojson)
+  } else {
+    map.addSource(SOURCE_ID, { type: 'geojson', data: geojson })
+    // Add trip lines below the stops layer so stops render on top.
+    const stopsLayerId = map.getLayer('gtfs-stops-layer') ? 'gtfs-stops-layer' : undefined
+    map.addLayer(
+      {
+        id: LAYER_ID,
+        type: 'line',
+        source: SOURCE_ID,
+        layout: { 'line-join': 'round', 'line-cap': 'round' },
+        paint: {
+          // Use route_color (hex without #) when present, otherwise a neutral grey.
+          'line-color': [
+            'case',
+            ['!=', ['get', 'route_color'], ''],
+            ['concat', '#', ['get', 'route_color']],
+            '#94a3b8',
+          ],
+          'line-width': 2,
+          'line-opacity': 0.8,
+        },
+      },
+      stopsLayerId,
+    )
+  }
+}

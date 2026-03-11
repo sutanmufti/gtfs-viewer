@@ -43,6 +43,31 @@
           )
           .addTo(appstate.map!)
       })
+
+      // Pointer cursor on trip line hover.
+      appstate.map!.on('mouseenter', 'gtfs-trips-layer', () => {
+        appstate.map!.getCanvas().style.cursor = 'pointer'
+      })
+      appstate.map!.on('mouseleave', 'gtfs-trips-layer', () => {
+        appstate.map!.getCanvas().style.cursor = ''
+      })
+
+      // Popup on trip line click.
+      appstate.map!.on('click', 'gtfs-trips-layer', (e) => {
+        const feature = e.features?.[0]
+        if (!feature) return
+        const props = feature.properties as Record<string, string>
+        const coords = e.lngLat
+        new mapboxgl.Popup()
+          .setLngLat(coords)
+          .setHTML(
+            `<strong>${props.route_short_name || props.route_id}</strong>` +
+            (props.route_long_name ? `<br/>${props.route_long_name}` : '') +
+            (props.headsign ? `<br/>→ ${props.headsign}` : '') +
+            `<br/><span style="font-size:0.75em;color:#666">${props.trip_id}</span>`
+          )
+          .addTo(appstate.map!)
+      })
     })
   })
 </script>

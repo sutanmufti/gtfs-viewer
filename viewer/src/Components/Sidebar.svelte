@@ -6,6 +6,7 @@
     fetchGtfsList,
     loadViewerPage,
     loadStopsOnMap,
+    loadTripStoptimesOnMap,
   } from './app.svelte'
 
   onMount(fetchGtfsList)
@@ -33,6 +34,7 @@
   async function selectFile(file: string) {
     await loadViewerPage(file, 1)
     if (file === 'stops') loadStopsOnMap()
+    if (file === 'trips') loadTripStoptimesOnMap()
   }
 
   let uploading = $state(false)
