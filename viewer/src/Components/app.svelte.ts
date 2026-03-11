@@ -26,6 +26,8 @@ export const appstate: {
   viewerTotal: number
   viewerTotalPages: number
   viewerLoading: boolean
+
+  activeRecord?: Record<string, unknown>
 } = $state({
   gtfsZipFiles: [],
   selectedGtfs: '',
