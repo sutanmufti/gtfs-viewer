@@ -164,16 +164,11 @@ export async function loadTripStoptimesOnMap() {
         layout: { 'line-join': 'round', 'line-cap': 'round' },
         paint: {
           // Use route_color (hex without #) when present, otherwise a neutral grey.
-          'line-color': [
-            'case',
-            ['boolean', ['feature-state', 'active'], false],
-            '#1d4ed8',
-            ['case',
+          'line-color': ['case',
               ['!=', ['get', 'route_color'], ''],
               ['concat', '#', ['get', 'route_color']],
               '#94a3b8',
             ],
-          ],
           'line-width': [
             'case', ['boolean', ['feature-state', 'active'], false], 5, 2,
           ],
