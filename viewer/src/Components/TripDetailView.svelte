@@ -1,6 +1,6 @@
 <script lang="ts">
   import { appstate } from './app.svelte'
-  import { onMount } from 'svelte'
+  import { onMount, onDestroy } from 'svelte'
 
   type StopTime = {
     ArrivalTime: string
@@ -33,9 +33,31 @@
     const gtfs = appstate.selectedGtfs
     const tripId = appstate.viewTrip
     if (!gtfs || !tripId) return
+
     const res = await fetch(`/gtfs/trip/${encodeURIComponent(tripId)}?gtfs=${encodeURIComponent(gtfs)}`)
     detail = await res.json()
     loading = false
+
+    const map = appstate.map
+    if (!map) return
+
+    if (map.getLayer('gtfs-trips-layer')) {
+      map.setFilter('gtfs-trips-layer', ['==', ['get', 'trip_id'], tripId])
+    }
+
+    const stopsRes = await fetch(`/gtfs/files/stops?gtfs=${encodeURIComponent(gtfs)}&trip=${encodeURIComponent(tripId)}`)
+    const stopsData = await stopsRes.json()
+    const stopIds = (stopsData.data ?? []).map((s: { StopID: string }) => s.StopID)
+    if (map.getLayer('gtfs-stops-layer')) {
+      map.setFilter('gtfs-stops-layer', ['in', ['get', 'stop_id'], ['literal', stopIds]])
+    }
+  })
+
+  onDestroy(() => {
+    const map = appstate.map
+    if (!map) return
+    if (map.getLayer('gtfs-trips-layer')) map.setFilter('gtfs-trips-layer', null)
+    if (map.getLayer('gtfs-stops-layer')) map.setFilter('gtfs-stops-layer', null)
   })
 
   function back() {
