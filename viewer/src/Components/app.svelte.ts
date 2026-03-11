@@ -129,7 +129,7 @@ export async function loadTripStoptimesOnMap() {
   if (map.getSource(SOURCE_ID)) {
     ;(map.getSource(SOURCE_ID) as mapboxgl.GeoJSONSource).setData(geojson)
   } else {
-    map.addSource(SOURCE_ID, { type: 'geojson', data: geojson })
+    map.addSource(SOURCE_ID, { type: 'geojson', data: geojson, generateId: true })
     // Add trip lines below the stops layer so stops render on top.
     const stopsLayerId = map.getLayer('gtfs-stops-layer') ? 'gtfs-stops-layer' : undefined
     map.addLayer(
@@ -142,12 +142,20 @@ export async function loadTripStoptimesOnMap() {
           // Use route_color (hex without #) when present, otherwise a neutral grey.
           'line-color': [
             'case',
-            ['!=', ['get', 'route_color'], ''],
-            ['concat', '#', ['get', 'route_color']],
-            '#94a3b8',
+            ['boolean', ['feature-state', 'active'], false],
+            '#1d4ed8',
+            ['case',
+              ['!=', ['get', 'route_color'], ''],
+              ['concat', '#', ['get', 'route_color']],
+              '#94a3b8',
+            ],
           ],
-          'line-width': 2,
-          'line-opacity': 0.8,
+          'line-width': [
+            'case', ['boolean', ['feature-state', 'active'], false], 5, 2,
+          ],
+          'line-opacity': [
+            'case', ['boolean', ['feature-state', 'active'], false], 1, 0.8,
+          ],
         },
       },
       stopsLayerId,
