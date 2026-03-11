@@ -142,92 +142,93 @@ func GetGTFSFile(c *gin.Context) {
 	switch fileName {
 	case "stops":
 		stops := g.StopData
-		offset, limit := paginate(len(stops), page)
+		offset, limit, totalPages := paginate(len(stops), page)
 		features := make([]map[string]any, 0, limit)
 		for i := offset; i < offset+limit; i++ {
 			features = append(features, stopToFeature(stops[i]))
 		}
 		c.JSON(http.StatusOK, gin.H{
-			"type":     "FeatureCollection",
-			"features": features,
-			"page":     page,
-			"total":    len(stops),
+			"type":       "FeatureCollection",
+			"features":   features,
+			"page":       page,
+			"total":      len(stops),
+			"totalPages": totalPages,
 		})
 
 	case "routes":
 		routes := g.RouteData
-		offset, limit := paginate(len(routes), page)
-		c.JSON(http.StatusOK, gin.H{"data": routes[offset : offset+limit], "page": page, "total": len(routes)})
+		offset, limit, totalPages := paginate(len(routes), page)
+		c.JSON(http.StatusOK, gin.H{"data": routes[offset : offset+limit], "page": page, "total": len(routes), "totalPages": totalPages})
 
 	case "trips":
 		trips := g.TripData
-		offset, limit := paginate(len(trips), page)
-		c.JSON(http.StatusOK, gin.H{"data": trips[offset : offset+limit], "page": page, "total": len(trips)})
+		offset, limit, totalPages := paginate(len(trips), page)
+		c.JSON(http.StatusOK, gin.H{"data": trips[offset : offset+limit], "page": page, "total": len(trips), "totalPages": totalPages})
 
 	case "agency":
 		agencies := g.AgencyData
-		offset, limit := paginate(len(agencies), page)
-		c.JSON(http.StatusOK, gin.H{"data": agencies[offset : offset+limit], "page": page, "total": len(agencies)})
+		offset, limit, totalPages := paginate(len(agencies), page)
+		c.JSON(http.StatusOK, gin.H{"data": agencies[offset : offset+limit], "page": page, "total": len(agencies), "totalPages": totalPages})
 
 	case "calendar":
 		calendars := g.CalendarData
-		offset, limit := paginate(len(calendars), page)
-		c.JSON(http.StatusOK, gin.H{"data": calendars[offset : offset+limit], "page": page, "total": len(calendars)})
+		offset, limit, totalPages := paginate(len(calendars), page)
+		c.JSON(http.StatusOK, gin.H{"data": calendars[offset : offset+limit], "page": page, "total": len(calendars), "totalPages": totalPages})
 
 	case "calendar_dates":
 		dates := g.CalendarDates
-		offset, limit := paginate(len(dates), page)
-		c.JSON(http.StatusOK, gin.H{"data": dates[offset : offset+limit], "page": page, "total": len(dates)})
+		offset, limit, totalPages := paginate(len(dates), page)
+		c.JSON(http.StatusOK, gin.H{"data": dates[offset : offset+limit], "page": page, "total": len(dates), "totalPages": totalPages})
 
 	case "shapes":
 		shapes := g.ShapeData
-		offset, limit := paginate(len(shapes), page)
-		c.JSON(http.StatusOK, gin.H{"data": shapes[offset : offset+limit], "page": page, "total": len(shapes)})
+		offset, limit, totalPages := paginate(len(shapes), page)
+		c.JSON(http.StatusOK, gin.H{"data": shapes[offset : offset+limit], "page": page, "total": len(shapes), "totalPages": totalPages})
 
 	case "frequencies":
 		freqs := g.FrequencyData
-		offset, limit := paginate(len(freqs), page)
-		c.JSON(http.StatusOK, gin.H{"data": freqs[offset : offset+limit], "page": page, "total": len(freqs)})
+		offset, limit, totalPages := paginate(len(freqs), page)
+		c.JSON(http.StatusOK, gin.H{"data": freqs[offset : offset+limit], "page": page, "total": len(freqs), "totalPages": totalPages})
 
 	case "transfers":
 		transfers := g.TransferData
-		offset, limit := paginate(len(transfers), page)
-		c.JSON(http.StatusOK, gin.H{"data": transfers[offset : offset+limit], "page": page, "total": len(transfers)})
+		offset, limit, totalPages := paginate(len(transfers), page)
+		c.JSON(http.StatusOK, gin.H{"data": transfers[offset : offset+limit], "page": page, "total": len(transfers), "totalPages": totalPages})
 
 	case "fare_attributes":
 		fa := g.FareAttributes
-		offset, limit := paginate(len(fa), page)
-		c.JSON(http.StatusOK, gin.H{"data": fa[offset : offset+limit], "page": page, "total": len(fa)})
+		offset, limit, totalPages := paginate(len(fa), page)
+		c.JSON(http.StatusOK, gin.H{"data": fa[offset : offset+limit], "page": page, "total": len(fa), "totalPages": totalPages})
 
 	case "fare_rules":
 		fr := g.FareRules
-		offset, limit := paginate(len(fr), page)
-		c.JSON(http.StatusOK, gin.H{"data": fr[offset : offset+limit], "page": page, "total": len(fr)})
+		offset, limit, totalPages := paginate(len(fr), page)
+		c.JSON(http.StatusOK, gin.H{"data": fr[offset : offset+limit], "page": page, "total": len(fr), "totalPages": totalPages})
 
 	case "feed_info":
 		fi := g.FeedInfo
-		offset, limit := paginate(len(fi), page)
-		c.JSON(http.StatusOK, gin.H{"data": fi[offset : offset+limit], "page": page, "total": len(fi)})
+		offset, limit, totalPages := paginate(len(fi), page)
+		c.JSON(http.StatusOK, gin.H{"data": fi[offset : offset+limit], "page": page, "total": len(fi), "totalPages": totalPages})
 
 	case "pathways":
 		pw := g.PathwayData
-		offset, limit := paginate(len(pw), page)
-		c.JSON(http.StatusOK, gin.H{"data": pw[offset : offset+limit], "page": page, "total": len(pw)})
+		offset, limit, totalPages := paginate(len(pw), page)
+		c.JSON(http.StatusOK, gin.H{"data": pw[offset : offset+limit], "page": page, "total": len(pw), "totalPages": totalPages})
 
 	case "levels":
 		lv := g.LevelData
-		offset, limit := paginate(len(lv), page)
-		c.JSON(http.StatusOK, gin.H{"data": lv[offset : offset+limit], "page": page, "total": len(lv)})
+		offset, limit, totalPages := paginate(len(lv), page)
+		c.JSON(http.StatusOK, gin.H{"data": lv[offset : offset+limit], "page": page, "total": len(lv), "totalPages": totalPages})
 
 	case "attributions":
 		attr := g.Attributions
-		offset, limit := paginate(len(attr), page)
-		c.JSON(http.StatusOK, gin.H{"data": attr[offset : offset+limit], "page": page, "total": len(attr)})
+		offset, limit, totalPages := paginate(len(attr), page)
+		c.JSON(http.StatusOK, gin.H{"data": attr[offset : offset+limit], "page": page, "total": len(attr), "totalPages": totalPages})
 
 	case "translations":
 		tr := g.Translations
-		offset, limit := paginate(len(tr), page)
-		c.JSON(http.StatusOK, gin.H{"data": tr[offset : offset+limit], "page": page, "total": len(tr)})
+		offset, limit, totalPages := paginate(len(tr), page)
+		c.JSON(http.StatusOK, gin.H{"data": tr[offset : offset+limit], "page": page, "total": len(tr), "totalPages": totalPages})
 
 	default:
 		c.JSON(http.StatusNotFound, gin.H{"error": fmt.Sprintf("unknown file '%s'", fileName)})
