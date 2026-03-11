@@ -32,6 +32,8 @@ export const appstate: {
   stopShowRoute: boolean
 
   routeResults?: any[]
+
+  viewTrip?: string
 } = $state({
   stopShowRoute: false,
   gtfsZipFiles: [],
@@ -42,6 +44,8 @@ export const appstate: {
   viewerTotal: 0,
   viewerTotalPages: 1,
   viewerLoading: false,
+
+  
 })
 
 export async function fetchGtfsList() {

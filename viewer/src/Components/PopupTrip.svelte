@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { appstate } from "./app.svelte";
+
   let {
     trip_id,
     headsign,
@@ -25,4 +27,10 @@
     <div>→ {headsign}</div>
   {/if}
   <div style="font-size:0.75em; color:#888">{trip_id}</div>
+
+  <div>
+    <button onclick={()=>{
+      appstate.viewTrip = trip_id
+    }}>View Trip</button>
+  </div>
 </div>
