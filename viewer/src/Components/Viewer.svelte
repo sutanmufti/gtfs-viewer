@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { appstate, loadViewerPage, switchLayer } from './app.svelte'
+  import { appstate, clearStopView, loadViewerPage, switchLayer } from './app.svelte'
   import * as turf from '@turf/turf'
 
   async function onRowClick(row: Record<string, unknown>) {
@@ -82,6 +82,12 @@
         <input type="checkbox" checked={showTrips} onchange={toggleTrips} class="accent-blue-600" />
         Trips
       </label>
+
+      {#if appstate.stopShowRoute }
+      <button onclick={clearStopView}>
+        Clear Stop View
+      </button>
+      {/if}
     </div>
 
 

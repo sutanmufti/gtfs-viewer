@@ -28,7 +28,10 @@ export const appstate: {
   viewerLoading: boolean
 
   activeRecord?: Record<string, unknown>
+
+  stopShowRoute: boolean
 } = $state({
+  stopShowRoute: false,
   gtfsZipFiles: [],
   selectedGtfs: '',
   selectedFile: '',
@@ -146,3 +149,68 @@ export function switchLayer(map: mapboxgl.Map,layerName: string, hide: boolean){
   const layer = map.getLayer(layerName);
   (hide && layer) ? map.setLayoutProperty(layerName, "visibility", "none") : map.setLayoutProperty(layerName, "visibility", "visible")
 }
+
+
+
+export function clearFilter(){
+  
+  appstate.map!.setFilter("gtfs-stops-layer", null)
+  appstate.map!.setFilter("gtfs-trips-layer", null)
+
+}
+
+// set to default after showRoutes
+export function clearStopView(){
+
+  clearFilter()
+  appstate.stopShowRoute = false
+}
+
+export async function showRoutes(stop_id: string) {
+    const map = appstate.map
+    const gtfs = appstate.selectedGtfs
+    if (!map || !gtfs) return
+
+    const enc = (s: string) => encodeURIComponent(s)
+
+    // 1. Get routes for this stop.
+    const stopRes = await fetch(`/gtfs/stop/${enc(stop_id)}?gtfs=${enc(gtfs)}`)
+    const stopData = await stopRes.json()
+    const routes: { RouteID: string }[] = stopData.routes ?? []
+
+    // 2. Get trips for each route in parallel.
+    const routeResults = await Promise.all(
+      routes.map(r =>
+        fetch(`/gtfs/route/${enc(r.RouteID)}?gtfs=${enc(gtfs)}`).then(res => res.json())
+      )
+    )
+
+    // 3. Collect all trip IDs and filter the trips layer.
+    const tripIds: string[] = routeResults.flatMap(r =>
+      (r.trips ?? []).map((t: { TripID: string }) => t.TripID)
+    )
+    if (map.getLayer('gtfs-trips-layer')) {
+      map.setFilter('gtfs-trips-layer', ['in', ['get', 'trip_id'], ['literal', tripIds]])
+    }
+
+    // 4. Fetch stops using the first trip of each route (representative — trips on
+    //    the same route share the same stops), collect unique stop IDs.
+    const representativeTripIds: string[] = routeResults
+      .map(r => r.trips?.[0]?.TripID as string | undefined)
+      .filter((id): id is string => !!id)
+
+    const stopsResults = await Promise.all(
+      representativeTripIds.map(id =>
+        fetch(`/gtfs/files/stops?gtfs=${enc(gtfs)}&trip=${enc(id)}`).then(res => res.json())
+      )
+    )
+
+    const stopIds = [...new Set<string>(
+      stopsResults.flatMap(r => (r.data ?? []).map((s: { StopID: string }) => s.StopID))
+    )]
+    if (map.getLayer('gtfs-stops-layer')) {
+      map.setFilter('gtfs-stops-layer', ['in', ['get', 'stop_id'], ['literal', stopIds]])
+    }
+
+    appstate.stopShowRoute = true
+  }
