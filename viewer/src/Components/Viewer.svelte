@@ -61,24 +61,6 @@
 </script>
 
 <div class="row-span-1 h-full flex flex-col overflow-hidden border-t border-gray-200 bg-white">
-  {#if appstate.viewTrip}
-      <div class="flex items-center justify-center h-full text-sm text-gray-400 italic">
-      Viewing trip
-    </div>
-  {:else if appstate.stopShowRoute}
-  <div class="flex items-center justify-center h-full text-sm text-gray-400 italic">
-      Viewing routes on this stop
-    </div>
-  {:else if !appstate.selectedFile}
-    <div class="flex items-center justify-center h-full text-sm text-gray-400 italic">
-      Select a file from the sidebar to view its contents.
-    </div>
-  {:else if appstate.viewerLoading}
-    <div class="flex items-center justify-center h-full text-sm text-gray-400">Loading…</div>
-  {:else if appstate.viewerData.length === 0}
-    <div class="flex items-center justify-center h-full text-sm text-gray-400 italic">No data.</div>
-  {:else}
-
     <!-- toolbar -->
     <div class="flex items-center gap-4 px-4 py-2 border-b border-gray-200 bg-gray-50 text-xs text-gray-600 shrink-0">
       <span class="font-semibold text-gray-500 uppercase tracking-wide">Layers</span>
@@ -97,6 +79,26 @@
       </button>
       {/if}
     </div>
+    
+  {#if appstate.viewTrip}
+      <div class="flex items-center justify-center h-full text-sm text-gray-400 italic">
+      Viewing trip
+    </div>
+  {:else if appstate.stopShowRoute}
+  <div class="flex items-center justify-center h-full text-sm text-gray-400 italic">
+      Viewing routes on this stop
+    </div>
+  {:else if !appstate.selectedFile}
+    <div class="flex items-center justify-center h-full text-sm text-gray-400 italic">
+      Select a file from the sidebar to view its contents.
+    </div>
+  {:else if appstate.viewerLoading}
+    <div class="flex items-center justify-center h-full text-sm text-gray-400">Loading…</div>
+  {:else if appstate.viewerData.length === 0}
+    <div class="flex items-center justify-center h-full text-sm text-gray-400 italic">No data.</div>
+  {:else}
+
+
 
 
     <!-- Table -->
