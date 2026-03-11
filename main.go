@@ -32,11 +32,10 @@ func main() {
 	flag.Parse()
 
 	if *filePath != "" {
-		g := &gtfsparser.GTFS{FileName: *filePath}
-		if err := g.ParseAll(); err != nil {
+		g, err := loadGTFS(*filePath)
+		if err != nil {
 			log.Fatalf("failed to parse GTFS file %q: %v", *filePath, err)
 		}
-		g.Compile()
 		name := filepath.Base(*filePath)
 		storeMu.Lock()
 		store[name] = g
