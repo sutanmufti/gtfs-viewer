@@ -72,12 +72,6 @@
         <input type="checkbox" checked={showTrips} onchange={toggleTrips} class="accent-blue-600" />
         Trips
       </label>
-
-      {#if appstate.stopShowRoute }
-      <button onclick={clearStopView}>
-        Clear Stop View
-      </button>
-      {/if}
     </div>
     
   {#if appstate.viewTrip}
