@@ -17,6 +17,16 @@
   }
 
   let activeFeatureId = $state<number | null>(null)
+  let collapsedRoutes = $state(new Set<string>())
+
+  function toggleRoute(routeId: string) {
+    if (collapsedRoutes.has(routeId)) {
+      collapsedRoutes.delete(routeId)
+    } else {
+      collapsedRoutes.add(routeId)
+    }
+    collapsedRoutes = new Set(collapsedRoutes)
+  }
 
   function setActiveTrip(tripId: string) {
     const map = appstate.map
@@ -51,6 +61,16 @@
     >← Back</button>
     <span class="text-xs text-gray-400">|</span>
     <span class="text-xs font-semibold uppercase tracking-wide text-gray-500">Routes at Stop</span>
+    <button
+      class="ml-auto text-xs text-blue-600 hover:text-blue-800 font-semibold"
+      onclick={() => {
+        if (collapsedRoutes.size === results.length) {
+          collapsedRoutes = new Set()
+        } else {
+          collapsedRoutes = new Set(results.map(r => r.route.RouteID))
+        }
+      }}
+    >{collapsedRoutes.size === results.length ? 'Expand All' : 'Hide All'}</button>
   </div>
 
   <!-- Route list -->
@@ -60,14 +80,20 @@
       <div class="border-b border-gray-200">
 
         <!-- Route header -->
-        <div class="flex items-center gap-2 px-4 py-2" style="border-left: 4px solid {color};">
+        <button
+          class="w-full flex items-center gap-2 px-4 py-2 text-left"
+          style="border-left: 4px solid {color};"
+          onclick={() => toggleRoute(result.route.RouteID)}
+        >
           <span class="font-semibold text-sm">{result.route.RouteShortName || result.route.RouteID}</span>
           {#if result.route.RouteLongName}
             <span class="text-xs text-gray-500 truncate">{result.route.RouteLongName}</span>
           {/if}
-        </div>
+          <span class="ml-auto text-gray-400 text-xs">{collapsedRoutes.has(result.route.RouteID) ? '▶' : '▼'}</span>
+        </button>
 
         <!-- Trip list -->
+        {#if !collapsedRoutes.has(result.route.RouteID)}
         {#each result.trips as trip}
           <div
             role="listitem"
@@ -90,6 +116,7 @@
             </button>
           </div>
         {/each}
+        {/if}
 
       </div>
     {/each}
