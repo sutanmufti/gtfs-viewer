@@ -28,6 +28,31 @@
 
   let detail = $state<TripDetail | null>(null)
   let loading = $state(true)
+  let activeFeatureId = $state<number | null>(null)
+
+  function setActiveStop(stopId: string | undefined) {
+    const map = appstate.map
+    if (!map || !stopId) return
+    // Clear previous active feature.
+    if (activeFeatureId !== null) {
+      map.removeFeatureState({ source: 'gtfs-stops', id: activeFeatureId }, 'active')
+    }
+    // Find the numeric feature ID assigned by generateId.
+    const features = map.querySourceFeatures('gtfs-stops', {
+      filter: ['==', ['get', 'stop_id'], stopId],
+    })
+    if (features.length > 0 && features[0].id !== undefined) {
+      activeFeatureId = features[0].id as number
+      map.setFeatureState({ source: 'gtfs-stops', id: activeFeatureId }, { active: true })
+    }
+  }
+
+  function clearActiveStop() {
+    const map = appstate.map
+    if (!map || activeFeatureId === null) return
+    map.removeFeatureState({ source: 'gtfs-stops', id: activeFeatureId }, 'active')
+    activeFeatureId = null
+  }
 
   onMount(async () => {
     const gtfs = appstate.selectedGtfs
@@ -115,7 +140,12 @@
         Stop Times ({detail.stop_times?.length ?? 0})
       </div>
       {#each detail.stop_times ?? [] as st}
-        <div class="flex items-start gap-2 px-2 py-1 rounded hover:bg-gray-100">
+        <div
+          role="listitem"
+          class="flex items-start gap-2 px-2 py-1 rounded hover:bg-gray-100"
+          onmouseenter={() => setActiveStop(st.StopID?.StopID)}
+          onmouseleave={clearActiveStop}
+        >
           <div class="text-gray-400 w-5 shrink-0 text-right">{st.StopSequence}</div>
           <div class="flex-1 min-w-0">
             <div class="truncate text-gray-800">{st.StopID?.StopName || st.StopID?.StopID}</div>

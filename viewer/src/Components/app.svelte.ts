@@ -83,14 +83,18 @@ export async function loadStopsOnMap() {
   if (map.getSource(SOURCE_ID)) {
     ;(map.getSource(SOURCE_ID) as mapboxgl.GeoJSONSource).setData(geojson)
   } else {
-    map.addSource(SOURCE_ID, { type: 'geojson', data: geojson })
+    map.addSource(SOURCE_ID, { type: 'geojson', data: geojson, generateId: true })
     map.addLayer({
       id: LAYER_ID,
       type: 'circle',
       source: SOURCE_ID,
       paint: {
-        'circle-radius': 5,
-        'circle-color': '#3b82f6',
+        'circle-radius': [
+          'case', ['boolean', ['feature-state', 'active'], false], 9, 5,
+        ],
+        'circle-color': [
+          'case', ['boolean', ['feature-state', 'active'], false], '#1d4ed8', '#3b82f6',
+        ],
         'circle-stroke-width': 1,
         'circle-stroke-color': '#1d4ed8',
       },
