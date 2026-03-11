@@ -30,6 +30,8 @@ func main() {
 		gtfs.GET("/stop/:stopId", GetStop)
 		gtfs.GET("/route/:routeId", GetRoute)
 		gtfs.GET("/trip/:tripId", GetTrip)
+
+		gtfs.GET("/trip", TripGeojson)
 	}
 
 	r.Run()

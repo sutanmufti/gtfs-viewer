@@ -421,3 +421,7 @@ func GetTrip(c *gin.Context) {
 		"frequencies": frequencies,
 	})
 }
+
+func TripGeojson(c *gin.Context) {
+
+}
