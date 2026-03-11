@@ -138,3 +138,9 @@ export async function loadTripStoptimesOnMap() {
     )
   }
 }
+
+
+export function switchLayer(map: mapboxgl.Map,layerName: string, hide: boolean){
+  const layer = map.getLayer(layerName);
+  (hide && layer) ? map.setLayoutProperty(layerName, "visibility", "none") : map.setLayoutProperty(layerName, "visibility", "visible")
+}

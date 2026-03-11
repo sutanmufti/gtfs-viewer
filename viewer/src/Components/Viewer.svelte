@@ -1,5 +1,18 @@
 <script lang="ts">
-  import { appstate, loadViewerPage } from './app.svelte'
+  import { appstate, loadViewerPage, switchLayer } from './app.svelte'
+
+  let showStops = $state(true)
+  let showTrips = $state(true)
+
+  function toggleStops() {
+    showStops = !showStops
+    if (appstate.map) switchLayer(appstate.map, 'gtfs-stops-layer', !showStops)
+  }
+
+  function toggleTrips() {
+    showTrips = !showTrips
+    if (appstate.map) switchLayer(appstate.map, 'gtfs-trips-layer', !showTrips)
+  }
 
   // Derive column headers from the first row of data.
   let columns = $derived(
@@ -34,8 +47,16 @@
   {:else}
 
     <!-- toolbar -->
-    <div class='text-xs'>
-        toolbar
+    <div class="flex items-center gap-4 px-4 py-2 border-b border-gray-200 bg-gray-50 text-xs text-gray-600 shrink-0">
+      <span class="font-semibold text-gray-500 uppercase tracking-wide">Layers</span>
+      <label class="flex items-center gap-1.5 cursor-pointer select-none">
+        <input type="checkbox" checked={showStops} onchange={toggleStops} class="accent-blue-600" />
+        Stops
+      </label>
+      <label class="flex items-center gap-1.5 cursor-pointer select-none">
+        <input type="checkbox" checked={showTrips} onchange={toggleTrips} class="accent-blue-600" />
+        Trips
+      </label>
     </div>
 
 
