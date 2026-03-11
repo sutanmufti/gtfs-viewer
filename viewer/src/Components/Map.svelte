@@ -1,8 +1,9 @@
 <script lang="ts">
   import mapboxgl from 'mapbox-gl'
   import { appstate } from './app.svelte'
-  import { onMount } from 'svelte'
+  import { onMount, mount } from 'svelte'
   import 'mapbox-gl/dist/mapbox-gl.css'
+  import PopupTrip from './PopupTrip.svelte'
 
   const envApiKey = import.meta.env.VITE_MAPBOX_KEY
 
@@ -34,13 +35,21 @@
         if (!feature) return
         const props = feature.properties as Record<string, string>
         const coords = (feature.geometry as GeoJSON.Point).coordinates as [number, number]
+
+
+        const divPopupTrip = document.createElement('div')
+        mount(PopupTrip, {
+          target: divPopupTrip,
+          props: {
+            stop_id:   props.stop_id,
+            stop_name: props.stop_name,
+            stop_code: props.stop_code,
+            stop_desc: props.stop_desc,
+          },
+        })
         new mapboxgl.Popup()
           .setLngLat(coords)
-          .setHTML(
-            `<strong>${props.stop_name || props.stop_id}</strong>` +
-            (props.stop_code ? `<br/>Code: ${props.stop_code}` : '') +
-            (props.stop_desc ? `<br/>${props.stop_desc}` : '')
-          )
+          .setDOMContent(divPopupTrip)
           .addTo(appstate.map!)
       })
 
