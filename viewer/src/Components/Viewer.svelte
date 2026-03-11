@@ -6,18 +6,16 @@
     appstate.viewerData.length > 0 ? Object.keys(appstate.viewerData[0]) : []
   )
 
-  let totalPages = $derived(Math.ceil(appstate.viewerTotal / 10))
-
   function prev() {
     if (appstate.viewerPage > 1) loadViewerPage(appstate.selectedFile, appstate.viewerPage - 1)
   }
 
   function next() {
-    if (appstate.viewerPage < totalPages) loadViewerPage(appstate.selectedFile, appstate.viewerPage + 1)
+    if (appstate.viewerPage < appstate.viewerTotalPages) loadViewerPage(appstate.selectedFile, appstate.viewerPage + 1)
   }
 </script>
 
-<div class="row-span-1 flex flex-col overflow-hidden border-t border-gray-200 bg-white">
+<div class="row-span-1 h-full flex flex-col overflow-hidden border-t border-gray-200 bg-white">
   {#if !appstate.selectedFile}
     <div class="flex items-center justify-center h-full text-sm text-gray-400 italic">
       Select a file from the sidebar to view its contents.
@@ -28,8 +26,8 @@
     <div class="flex items-center justify-center h-full text-sm text-gray-400 italic">No data.</div>
   {:else}
     <!-- Table -->
-    <div class="overflow-auto flex-1 text-xs">
-      <table class="min-w-full border-collapse">
+    <div class="overflow-auto flex-1 text-xs min-h-0">
+      <table class="min-w-full border-collapse overflow-auto">
         <thead class="bg-gray-100 sticky top-0">
           <tr>
             {#each columns as col}
@@ -62,10 +60,10 @@
           disabled={appstate.viewerPage <= 1}
           class="px-2 py-1 rounded border border-gray-300 disabled:opacity-40 hover:bg-gray-200"
         >← Prev</button>
-        <span>Page {appstate.viewerPage} / {totalPages}</span>
+        <span>Page {appstate.viewerPage} / {appstate.viewerTotalPages}</span>
         <button
           onclick={next}
-          disabled={appstate.viewerPage >= totalPages}
+          disabled={appstate.viewerPage >= appstate.viewerTotalPages}
           class="px-2 py-1 rounded border border-gray-300 disabled:opacity-40 hover:bg-gray-200"
         >Next →</button>
       </div>

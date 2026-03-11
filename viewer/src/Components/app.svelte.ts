@@ -24,6 +24,7 @@ export const appstate: {
   viewerData: Record<string, unknown>[]
   viewerPage: number
   viewerTotal: number
+  viewerTotalPages: number
   viewerLoading: boolean
 } = $state({
   gtfsZipFiles: [],
@@ -32,6 +33,7 @@ export const appstate: {
   viewerData: [],
   viewerPage: 1,
   viewerTotal: 0,
+  viewerTotalPages: 1,
   viewerLoading: false,
 })
 
@@ -49,13 +51,15 @@ export async function loadViewerPage(file: string, page: number) {
   try {
     const res = await fetch(`/gtfs/files/${file}?gtfs=${encodeURIComponent(appstate.selectedGtfs)}&page=${page}`)
     const data = await res.json()
-    // Stops return GeoJSON; everything else returns { data, total }
+    // Stops return GeoJSON; everything else returns { data, total, totalPages }
     if (file === 'stops') {
       appstate.viewerData = (data.features ?? []).map((f: any) => f.properties)
       appstate.viewerTotal = data.total ?? appstate.viewerData.length
+      appstate.viewerTotalPages = data.totalPages ?? 1
     } else {
       appstate.viewerData = data.data ?? []
       appstate.viewerTotal = data.total ?? 0
+      appstate.viewerTotalPages = data.totalPages ?? 1
     }
   } finally {
     appstate.viewerLoading = false
