@@ -33,19 +33,21 @@
       // Popup on stop click.
       appstate.map!.on('click', 'gtfs-trips-layer', (e) => {
         const feature = e.features?.[0]
+        console.log("trip:",feature)
         if (!feature) return
         const props = feature.properties as Record<string, string>
-        const coords = (feature.geometry as GeoJSON.Point).coordinates as [number, number]
+        const coords = e.lngLat
 
 
         const divPopupTrip = document.createElement('div')
         mount(PopupTrip, {
           target: divPopupTrip,
           props: {
-            stop_id:   props.stop_id,
-            stop_name: props.stop_name,
-            stop_code: props.stop_code,
-            stop_desc: props.stop_desc,
+            trip_id:          props.trip_id,
+            headsign:         props.headsign,
+            route_short_name: props.route_short_name,
+            route_long_name:  props.route_long_name,
+            route_color:      props.route_color,
           },
         })
         new mapboxgl.Popup()
