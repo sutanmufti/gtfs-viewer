@@ -30,6 +30,8 @@ export const appstate: {
   activeRecord?: Record<string, unknown>
 
   stopShowRoute: boolean
+
+  routeResults?: any[]
 } = $state({
   stopShowRoute: false,
   gtfsZipFiles: [],
@@ -164,6 +166,7 @@ export function clearStopView(){
 
   clearFilter()
   appstate.stopShowRoute = false
+  appstate.routeResults = undefined
 }
 
 export async function showRoutes(stop_id: string) {
@@ -179,14 +182,14 @@ export async function showRoutes(stop_id: string) {
     const routes: { RouteID: string }[] = stopData.routes ?? []
 
     // 2. Get trips for each route in parallel.
-    const routeResults = await Promise.all(
+    appstate.routeResults = await Promise.all(
       routes.map(r =>
         fetch(`/gtfs/route/${enc(r.RouteID)}?gtfs=${enc(gtfs)}`).then(res => res.json())
       )
     )
 
     // 3. Collect all trip IDs and filter the trips layer.
-    const tripIds: string[] = routeResults.flatMap(r =>
+    const tripIds: string[] = appstate.routeResults.flatMap(r =>
       (r.trips ?? []).map((t: { TripID: string }) => t.TripID)
     )
     if (map.getLayer('gtfs-trips-layer')) {
@@ -195,7 +198,7 @@ export async function showRoutes(stop_id: string) {
 
     // 4. Fetch stops using the first trip of each route (representative — trips on
     //    the same route share the same stops), collect unique stop IDs.
-    const representativeTripIds: string[] = routeResults
+    const representativeTripIds: string[] = appstate.routeResults
       .map(r => r.trips?.[0]?.TripID as string | undefined)
       .filter((id): id is string => !!id)
 

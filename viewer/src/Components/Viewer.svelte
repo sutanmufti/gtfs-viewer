@@ -61,7 +61,11 @@
 </script>
 
 <div class="row-span-1 h-full flex flex-col overflow-hidden border-t border-gray-200 bg-white">
-  {#if !appstate.selectedFile}
+  {#if appstate.stopShowRoute}
+      <div class="flex items-center justify-center h-full text-sm text-gray-400 italic">
+      Viewing routes on this stop
+    </div>
+  {:else if !appstate.selectedFile}
     <div class="flex items-center justify-center h-full text-sm text-gray-400 italic">
       Select a file from the sidebar to view its contents.
     </div>
