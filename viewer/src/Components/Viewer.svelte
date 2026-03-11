@@ -16,6 +16,13 @@
       if (appstate.map.getLayer('gtfs-trips-layer')) {
         appstate.map.setFilter('gtfs-trips-layer', ['==', ['get', 'trip_id'], tripId])
       }
+
+      if (appstate.map.getLayer('gtfs-stops-layer')) {
+        const stopsRes = await fetch(`/gtfs/files/stops?gtfs=${encodeURIComponent(appstate.selectedGtfs)}&trip=${encodeURIComponent(tripId)}`)
+        const stopsData = await stopsRes.json()
+        const stopIds = (stopsData.data as Record<string, unknown>[]).map(s => s['StopID'] as string)
+        appstate.map.setFilter('gtfs-stops-layer', ['in', ['get', 'stop_id'], ['literal', stopIds]])
+      }
     }
   }
 

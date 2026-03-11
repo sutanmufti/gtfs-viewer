@@ -6,6 +6,9 @@
     if (appstate.map?.getLayer('gtfs-trips-layer')) {
       appstate.map.setFilter('gtfs-trips-layer', null)
     }
+    if (appstate.map?.getLayer('gtfs-stops-layer')) {
+      appstate.map.setFilter('gtfs-stops-layer', null)
+    }
   }
 
   // Format a value for display: primitives inline, objects as indented JSON.
