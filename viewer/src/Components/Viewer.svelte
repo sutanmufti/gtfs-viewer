@@ -32,8 +32,16 @@
   {:else if appstate.viewerData.length === 0}
     <div class="flex items-center justify-center h-full text-sm text-gray-400 italic">No data.</div>
   {:else}
+
+    <!-- toolbar -->
+    <div class='text-xs'>
+        toolbar
+    </div>
+
+
     <!-- Table -->
-    <div class="overflow-auto flex-1 text-xs min-h-0">
+    
+    <div class="overflow-auto flex-1 text-xs min-h-0 relative">
       <table class="min-w-full border-collapse overflow-auto">
         <thead class="bg-gray-100 sticky top-0">
           <tr>
