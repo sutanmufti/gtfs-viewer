@@ -1,16 +1,23 @@
 package main
 
 import (
+	"embed"
 	"flag"
 	"fmt"
+	"io/fs"
 	"log"
+	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 
 	"github.com/gin-gonic/gin"
 	gtfsparser "github.com/sutanmufti/gtfs-parser"
 )
+
+//go:embed viewer/dist
+var distFS embed.FS
 
 var (
 	store   = map[string]*gtfsparser.GTFS{}
@@ -38,6 +45,30 @@ func main() {
 	}
 
 	r := gin.Default()
+
+	// Serve embedded frontend at /.
+	sub, err := fs.Sub(distFS, "viewer/dist")
+	if err != nil {
+		log.Fatalf("failed to create sub FS: %v", err)
+	}
+	r.NoRoute(func(c *gin.Context) {
+		filePath := strings.TrimPrefix(c.Request.URL.Path, "/")
+		if filePath == "" {
+			filePath = "index.html"
+		}
+		f, err := sub.Open(filePath)
+		if err != nil {
+			c.FileFromFS("index.html", http.FS(sub))
+			return
+		}
+		stat, err := f.Stat()
+		f.Close()
+		if err != nil || stat.IsDir() {
+			c.FileFromFS("index.html", http.FS(sub))
+			return
+		}
+		http.FileServer(http.FS(sub)).ServeHTTP(c.Writer, c.Request)
+	})
 
 	r.GET("/ping", Ping)
 
