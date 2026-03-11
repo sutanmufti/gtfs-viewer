@@ -76,7 +76,10 @@
         <tbody>
 
           {#each pagedViewerData as row, i}
-            <tr class="{i % 2 === 0 ? 'bg-white' : 'bg-gray-50'} hover:bg-blue-50">
+            <tr
+              class="{i % 2 === 0 ? 'bg-white' : 'bg-gray-50'} hover:bg-blue-50 cursor-pointer"
+              onclick={() => appstate.activeRecord = row}
+            >
               {#each columns as col}
                 <td class="px-3 py-1.5 border-b border-gray-100 whitespace-nowrap text-gray-700 max-w-50 truncate">
                   {row[col] ?? ''}
