@@ -2,6 +2,11 @@
 
 A Go/Gin web application for visualising [GTFS](https://gtfs.org/) (General Transit Feed Specification) data on an interactive map.
 
+
+# Verison 1.0.0
+
+First release
+
 ## Features
 
 - Upload and manage multiple GTFS zip files
