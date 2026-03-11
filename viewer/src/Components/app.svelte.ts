@@ -51,16 +51,9 @@ export async function loadViewerPage(file: string, page: number) {
   try {
     const res = await fetch(`/gtfs/files/${file}?gtfs=${encodeURIComponent(appstate.selectedGtfs)}&page=${page}`)
     const data = await res.json()
-    // Stops return GeoJSON; everything else returns { data, total, totalPages }
-    if (file === 'stops') {
-      appstate.viewerData = (data.features ?? []).map((f: any) => f.properties)
-      appstate.viewerTotal = data.total ?? appstate.viewerData.length
-      appstate.viewerTotalPages = data.totalPages ?? 1
-    } else {
-      appstate.viewerData = data.data ?? []
-      appstate.viewerTotal = data.total ?? 0
-      appstate.viewerTotalPages = data.totalPages ?? 1
-    }
+    appstate.viewerData = data.data ?? []
+    appstate.viewerTotal = data.total ?? 0
+    appstate.viewerTotalPages = data.totalPages ?? 1
   } finally {
     appstate.viewerLoading = false
   }
@@ -70,7 +63,7 @@ export async function loadStopsOnMap() {
   const map = appstate.map
   if (!map || !appstate.selectedGtfs) return
 
-  const res = await fetch(`/gtfs/files/stops?gtfs=${encodeURIComponent(appstate.selectedGtfs)}`)
+  const res = await fetch(`/gtfs/files/stops?gtfs=${encodeURIComponent(appstate.selectedGtfs)}&geojson=true`)
   const geojson = await res.json()
 
   const SOURCE_ID = 'gtfs-stops'

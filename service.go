@@ -289,14 +289,26 @@ func GetStops(c *gin.Context) {
 		return
 	}
 
-	features := make([]map[string]any, 0, len(g.StopData))
-	for _, s := range g.StopData {
-		features = append(features, stopToFeature(s))
+	if c.Query("geojson") == "true" {
+		features := make([]map[string]any, 0, len(g.StopData))
+		for _, s := range g.StopData {
+			features = append(features, stopToFeature(s))
+		}
+		c.JSON(http.StatusOK, gin.H{
+			"type":     "FeatureCollection",
+			"features": features,
+		})
+		return
 	}
 
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	stops := g.StopData
+	offset, limit, totalPages := paginate(len(stops), page)
 	c.JSON(http.StatusOK, gin.H{
-		"type":     "FeatureCollection",
-		"features": features,
+		"data":       stops[offset : offset+limit],
+		"page":       page,
+		"total":      len(stops),
+		"totalPages": totalPages,
 	})
 }
 
