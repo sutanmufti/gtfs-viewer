@@ -14,8 +14,12 @@
     if (appstate.viewerPage < appstate.viewerTotalPages) loadViewerPage(appstate.selectedFile, appstate.viewerPage + 1)
   }
 
-  // Responds to active page
-  let pagedViewerData: Record<string, unknown>[] = $derived(appstate.viewerData) // needs to be updated to include appstate.viewerPage
+  const PAGE_SIZE = 10
+
+  // Derives visible rows for the current page from viewerData.
+  let pagedViewerData = $derived(
+    appstate.viewerData.filter((_, i) => i < appstate.viewerPage * PAGE_SIZE)
+  )
 </script>
 
 <div class="row-span-1 h-full flex flex-col overflow-hidden border-t border-gray-200 bg-white">
@@ -42,8 +46,7 @@
         </thead>
         <tbody>
 
-          <!-- must iterate over pagedViewerData instead -->
-          {#each appstate.viewerData as row, i}
+          {#each pagedViewerData as row, i}
             <tr class="{i % 2 === 0 ? 'bg-white' : 'bg-gray-50'} hover:bg-blue-50">
               {#each columns as col}
                 <td class="px-3 py-1.5 border-b border-gray-100 whitespace-nowrap text-gray-700 max-w-50 truncate">

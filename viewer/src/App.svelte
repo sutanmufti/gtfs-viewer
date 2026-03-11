@@ -6,7 +6,7 @@
 
 <main class="grid grid-cols-4 w-screen h-screen overflow-hidden">
   <Sidebar />
-  <div class="col-span-3 grid grid-rows-4">
+  <div class="col-span-3 grid grid-rows-4 overflow-auto">
     <div class="row-span-3">
       <Map />
     </div>
