@@ -34,7 +34,7 @@ export const appstate: {
   routeResults?: any[]
 
   viewTrip?: string
-  
+
   lastStopId?: string
 } = $state({
   stopShowRoute: false,
@@ -155,7 +155,7 @@ export async function loadTripStoptimesOnMap() {
             'case', ['boolean', ['feature-state', 'active'], false], 5, 2,
           ],
           'line-opacity': [
-            'case', ['boolean', ['feature-state', 'active'], false], 1, 0.8,
+            'case', ['boolean', ['feature-state', 'active'], false], 1, 0.75,
           ],
         },
       },
