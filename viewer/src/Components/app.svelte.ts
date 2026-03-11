@@ -34,6 +34,7 @@ export const appstate: {
   routeResults?: any[]
 
   viewTrip?: string
+  lastStopId?: string
 } = $state({
   stopShowRoute: false,
   gtfsZipFiles: [],
@@ -182,6 +183,7 @@ export async function showRoutes(stop_id: string) {
     const gtfs = appstate.selectedGtfs
     if (!map || !gtfs) return
 
+    appstate.lastStopId = stop_id
     const enc = (s: string) => encodeURIComponent(s)
 
     // 1. Get routes for this stop.

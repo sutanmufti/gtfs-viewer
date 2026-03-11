@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { appstate } from './app.svelte'
+  import { appstate, showRoutes } from './app.svelte'
   import { onMount, onDestroy } from 'svelte'
 
   type StopTime = {
@@ -79,14 +79,21 @@
   })
 
   onDestroy(() => {
-    const map = appstate.map
-    if (!map) return
-    if (map.getLayer('gtfs-trips-layer')) map.setFilter('gtfs-trips-layer', null)
-    if (map.getLayer('gtfs-stops-layer')) map.setFilter('gtfs-stops-layer', null)
+    // If returning to stop view, showRoutes() will re-apply the correct filters.
+    // Only clear filters when going back to the default view.
+    if (!appstate.stopShowRoute) {
+      const map = appstate.map
+      if (!map) return
+      if (map.getLayer('gtfs-trips-layer')) map.setFilter('gtfs-trips-layer', null)
+      if (map.getLayer('gtfs-stops-layer')) map.setFilter('gtfs-stops-layer', null)
+    }
   })
 
   function back() {
     appstate.viewTrip = undefined
+    if (appstate.stopShowRoute && appstate.lastStopId) {
+      showRoutes(appstate.lastStopId)
+    }
   }
 
   const color = $derived(
