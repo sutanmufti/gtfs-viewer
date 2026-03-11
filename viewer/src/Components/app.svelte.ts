@@ -12,6 +12,8 @@ export const appstate: {
   mapdiv?: HTMLDivElement
   map?: mapboxgl.Map
 
+  withFile: boolean
+
   // Uploaded GTFS zip names from GET /gtfs/
   gtfsZipFiles: string[]
   // Currently selected GTFS feed name
@@ -46,6 +48,7 @@ export const appstate: {
   viewerTotal: 0,
   viewerTotalPages: 1,
   viewerLoading: false,
+  withFile: false
 
   
 })
@@ -54,6 +57,24 @@ export async function fetchGtfsList() {
   const res = await fetch('/gtfs/')
   const data = await res.json()
   appstate.gtfsZipFiles = data.gtfs ?? []
+}
+
+export async function selectGtfs(name: string) {
+  appstate.selectedGtfs = name
+  appstate.selectedFile = ''
+  appstate.viewerData = []
+  appstate.viewerTotal = 0
+
+  if (appstate.map) {
+    loadStopsOnMap()
+  } else {
+    const interval = setInterval(() => {
+      if (appstate.map) {
+        clearInterval(interval)
+        loadStopsOnMap()
+      }
+    }, 200)
+  }
 }
 
 export async function loadViewerPage(file: string, page: number) {

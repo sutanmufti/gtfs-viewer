@@ -7,29 +7,10 @@
     loadViewerPage,
     loadStopsOnMap,
     loadTripStoptimesOnMap,
+    selectGtfs,
   } from './app.svelte'
 
   onMount(fetchGtfsList)
-
-  async function selectGtfs(name: string) {
-    appstate.selectedGtfs = name
-    appstate.selectedFile = ''
-    appstate.viewerData = []
-    appstate.viewerTotal = 0
-
-    // Always load stops onto the map when a feed is selected.
-    // Wait for the map to be ready if it isn't yet.
-    if (appstate.map) {
-      loadStopsOnMap()
-    } else {
-      const interval = setInterval(() => {
-        if (appstate.map) {
-          clearInterval(interval)
-          loadStopsOnMap()
-        }
-      }, 200)
-    }
-  }
 
   async function selectFile(file: string) {
     await loadViewerPage(file, 1)
@@ -69,16 +50,18 @@
 <div class="col-span-1 flex flex-col overflow-hidden border-r border-gray-200 bg-gray-50">
 
     <!-- Section 0: Upload GTFS Inputs -->
-    <div class="p-4 border-b border-gray-200">
-      <h2 class="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">Upload GTFS</h2>
-      <label class="flex items-center justify-center w-full px-3 py-2 rounded border border-dashed border-gray-300 text-sm text-gray-500 cursor-pointer hover:bg-gray-100 {uploading ? 'opacity-50 pointer-events-none' : ''}">
-        {uploading ? 'Uploading…' : 'Choose zip file'}
-        <input type="file" accept=".zip" class="hidden" onchange={handleUpload} disabled={uploading} />
-      </label>
-      {#if uploadError}
-        <p class="mt-1 text-xs text-red-500">{uploadError}</p>
-      {/if}
-    </div>
+     {#if !appstate.withFile}
+      <div class="p-4 border-b border-gray-200 {appstate.withFile ? 'opacity-40 pointer-events-none' : ''}">
+        <h2 class="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">Upload GTFS</h2>
+        <label class="flex items-center justify-center w-full px-3 py-2 rounded border border-dashed border-gray-300 text-sm text-gray-500 cursor-pointer hover:bg-gray-100 {uploading ? 'opacity-50 pointer-events-none' : ''}">
+          {uploading ? 'Uploading…' : 'Choose zip file'}
+          <input type="file" accept=".zip" class="hidden" onchange={handleUpload} disabled={uploading || appstate.withFile} />
+        </label>
+        {#if uploadError}
+          <p class="mt-1 text-xs text-red-500">{uploadError}</p>
+        {/if}
+      </div>
+    {/if}
 
   <!-- Section 1: GTFS zip selector -->
   <div class="p-4 border-b border-gray-200">

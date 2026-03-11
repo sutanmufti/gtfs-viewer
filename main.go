@@ -39,11 +39,11 @@ func main() {
 	r := gin.Default()
 
 	r.GET("/ping", Ping)
-	r.GET("/config", GetConfig)
 
 	gtfs := r.Group("/gtfs")
 	{
 		gtfs.GET("/", ListGTFS)
+		gtfs.GET("/config", GetConfig)
 		gtfs.POST("/upload", UploadGTFS)
 
 		// Static route must be registered before the parameterized one.
