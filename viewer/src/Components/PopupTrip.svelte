@@ -28,9 +28,10 @@
   {/if}
   <div style="font-size:0.75em; color:#888">{trip_id}</div>
 
-  <div>
-    <button onclick={()=>{
-      appstate.viewTrip = trip_id
-    }}>View Trip</button>
+  <div class="mt-2">
+    <button
+      onclick={() => { appstate.viewTrip = trip_id }}
+      class="text-xs px-2 py-1 rounded bg-blue-600 text-white hover:bg-blue-700 font-semibold"
+    >View Trip</button>
   </div>
 </div>

@@ -28,4 +28,9 @@
 
 <br/><span style="font-size:0.75em;color:#666">{ParentStation}</span>
 
-<br/><button onclick={()=>showRoutes(stop_id)}>Show Routes</button>
+<div class="mt-2">
+  <button
+    onclick={() => showRoutes(stop_id)}
+    class="text-xs px-2 py-1 rounded bg-blue-600 text-white hover:bg-blue-700 font-semibold"
+  >Show Routes</button>
+</div>
