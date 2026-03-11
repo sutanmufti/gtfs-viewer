@@ -13,6 +13,9 @@
   function next() {
     if (appstate.viewerPage < appstate.viewerTotalPages) loadViewerPage(appstate.selectedFile, appstate.viewerPage + 1)
   }
+
+  // Responds to active page
+  let pagedViewerData: Record<string, unknown>[] = $derived(appstate.viewerData) // needs to be updated to include appstate.viewerPage
 </script>
 
 <div class="row-span-1 h-full flex flex-col overflow-hidden border-t border-gray-200 bg-white">
@@ -38,6 +41,8 @@
           </tr>
         </thead>
         <tbody>
+
+          <!-- must iterate over pagedViewerData instead -->
           {#each appstate.viewerData as row, i}
             <tr class="{i % 2 === 0 ? 'bg-white' : 'bg-gray-50'} hover:bg-blue-50">
               {#each columns as col}
