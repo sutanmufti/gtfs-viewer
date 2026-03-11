@@ -415,6 +415,37 @@ func GetTrip(c *gin.Context) {
 	stopTimes := g.TripStopTimes[tripPtr]
 	frequencies := g.FrequenciesByTrip[tripPtr]
 
+	if c.Query("geojson") == "true" {
+		coords := make([][2]float64, 0, len(stopTimes))
+		for _, st := range stopTimes {
+			if st.StopID == nil || st.StopID.StopLon == nil || st.StopID.StopLat == nil {
+				continue
+			}
+			coords = append(coords, [2]float64{*st.StopID.StopLon, *st.StopID.StopLat})
+		}
+
+		props := map[string]any{
+			"trip_id":  tripPtr.TripID,
+			"headsign": tripPtr.TripHeadsign,
+		}
+		if tripPtr.RouteID != nil {
+			props["route_id"] = tripPtr.RouteID.RouteID
+			props["route_short_name"] = tripPtr.RouteID.RouteShortName
+			props["route_long_name"] = tripPtr.RouteID.RouteLongName
+			props["route_color"] = tripPtr.RouteID.RouteColor
+		}
+
+		c.JSON(http.StatusOK, map[string]any{
+			"type": "Feature",
+			"geometry": map[string]any{
+				"type":        "LineString",
+				"coordinates": coords,
+			},
+			"properties": props,
+		})
+		return
+	}
+
 	c.JSON(http.StatusOK, gin.H{
 		"trip":        tripPtr,
 		"stop_times":  stopTimes,
