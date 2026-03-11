@@ -1,6 +1,10 @@
 package main
 
 import (
+	"flag"
+	"fmt"
+	"log"
+	"path/filepath"
 	"sync"
 
 	"github.com/gin-gonic/gin"
@@ -12,10 +16,30 @@ var (
 	storeMu sync.RWMutex
 )
 
+var WithFile = false
+
 func main() {
+	filePath := flag.String("f", "", "path to a GTFS zip file to load on startup")
+	flag.Parse()
+
+	if *filePath != "" {
+		g := &gtfsparser.GTFS{FileName: *filePath}
+		if err := g.ParseAll(); err != nil {
+			log.Fatalf("failed to parse GTFS file %q: %v", *filePath, err)
+		}
+		g.Compile()
+		name := filepath.Base(*filePath)
+		storeMu.Lock()
+		store[name] = g
+		storeMu.Unlock()
+		WithFile = true
+		fmt.Printf("Loaded GTFS file: %s\n", name)
+	}
+
 	r := gin.Default()
 
 	r.GET("/ping", Ping)
+	r.GET("/config", GetConfig)
 
 	gtfs := r.Group("/gtfs")
 	{

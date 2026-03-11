@@ -17,6 +17,19 @@ func Ping(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "pong"})
 }
 
+func GetConfig(c *gin.Context) {
+	var fileName string
+	if WithFile {
+		storeMu.RLock()
+		for k := range store {
+			fileName = k
+			break
+		}
+		storeMu.RUnlock()
+	}
+	c.JSON(http.StatusOK, gin.H{"withFile": WithFile, "fileName": fileName})
+}
+
 // getGTFS retrieves a GTFS instance from the store by name (query param "gtfs").
 func getGTFS(c *gin.Context) (*gtfsparser.GTFS, bool) {
 	name := c.Query("gtfs")
