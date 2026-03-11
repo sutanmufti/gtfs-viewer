@@ -20,6 +20,7 @@
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.2.1",
+    "@turf/turf": "^7.3.4",
     "mapbox-gl": "^3.19.1",
     "tailwindcss": "^4.2.1"
   }
