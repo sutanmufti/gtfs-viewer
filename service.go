@@ -422,6 +422,56 @@ func GetTrip(c *gin.Context) {
 	})
 }
 
+// TripGeojson handles GET /gtfs/trip — returns all trips as a GeoJSON
+// FeatureCollection of LineString features, each constructed from the ordered
+// stop coordinates in TripStopTimes.
 func TripGeojson(c *gin.Context) {
+	g, ok := getGTFS(c)
+	if !ok {
+		return
+	}
 
+	features := make([]map[string]any, 0, len(g.TripStopTimes))
+
+	for trip, stopTimes := range g.TripStopTimes {
+		// Build coordinate sequence from stop positions.
+		coords := make([][2]float64, 0, len(stopTimes))
+		for _, st := range stopTimes {
+			if st.StopID == nil || st.StopID.StopLon == nil || st.StopID.StopLat == nil {
+				continue
+			}
+			coords = append(coords, [2]float64{*st.StopID.StopLon, *st.StopID.StopLat})
+		}
+
+		// A LineString requires at least 2 points.
+		if len(coords) < 2 {
+			continue
+		}
+
+		props := map[string]any{
+			"trip_id":   trip.TripID,
+			"headsign":  trip.TripHeadsign,
+			"direction": int(trip.DirectionID),
+		}
+		if trip.RouteID != nil {
+			props["route_id"] = trip.RouteID.RouteID
+			props["route_short_name"] = trip.RouteID.RouteShortName
+			props["route_long_name"] = trip.RouteID.RouteLongName
+			props["route_color"] = trip.RouteID.RouteColor
+		}
+
+		features = append(features, map[string]any{
+			"type": "Feature",
+			"geometry": map[string]any{
+				"type":        "LineString",
+				"coordinates": coords,
+			},
+			"properties": props,
+		})
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"type":     "FeatureCollection",
+		"features": features,
+	})
 }
