@@ -289,9 +289,33 @@ func GetStops(c *gin.Context) {
 		return
 	}
 
+	// If trip= is provided, resolve the stop list from TripStopTimes.
+	stops := g.StopData
+	if tripID := c.Query("trip"); tripID != "" {
+		var tripPtr *gtfsparser.Trip
+		for i := range g.TripData {
+			if g.TripData[i].TripID == tripID {
+				tripPtr = &g.TripData[i]
+				break
+			}
+		}
+		if tripPtr == nil {
+			c.JSON(http.StatusNotFound, gin.H{"error": fmt.Sprintf("trip '%s' not found", tripID)})
+			return
+		}
+		stopTimes := g.TripStopTimes[tripPtr]
+		filtered := make([]gtfsparser.Stop, 0, len(stopTimes))
+		for _, st := range stopTimes {
+			if st.StopID != nil {
+				filtered = append(filtered, *st.StopID)
+			}
+		}
+		stops = filtered
+	}
+
 	if c.Query("geojson") == "true" {
-		features := make([]map[string]any, 0, len(g.StopData))
-		for _, s := range g.StopData {
+		features := make([]map[string]any, 0, len(stops))
+		for _, s := range stops {
 			features = append(features, stopToFeature(s))
 		}
 		c.JSON(http.StatusOK, gin.H{
@@ -301,8 +325,16 @@ func GetStops(c *gin.Context) {
 		return
 	}
 
+	if c.Query("trip") != "" {
+		c.JSON(http.StatusOK, gin.H{
+			"data":       stops,
+			"total":      len(stops),
+			"totalPages": 1,
+		})
+		return
+	}
+
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
-	stops := g.StopData
 	offset, limit, totalPages := paginate(len(stops), page)
 	c.JSON(http.StatusOK, gin.H{
 		"data":       stops[offset : offset+limit],
