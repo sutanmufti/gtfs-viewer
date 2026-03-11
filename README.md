@@ -1,5 +1,10 @@
 # GTFS Viewer
 
+[![Test](https://github.com/sutanmufti/gtfs-viewer/actions/workflows/test.yml/badge.svg)](https://github.com/sutanmufti/gtfs-viewer/actions/workflows/test.yml)
+[![Release](https://github.com/sutanmufti/gtfs-viewer/actions/workflows/release.yml/badge.svg)](https://github.com/sutanmufti/gtfs-viewer/actions/workflows/release.yml)
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
+[![Go](https://img.shields.io/badge/go-1.25+-00ADD8.svg)](go.mod)
+
 A Go/Gin web application for visualising [GTFS](https://gtfs.org/) (General Transit Feed Specification) data on an interactive map.
 
 
