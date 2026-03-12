@@ -16,5 +16,12 @@ jobs:
         with:
           go-version-file: go.mod
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Build viewer
+        run: cd viewer && npm ci && npm run build
+
       - name: Run tests
         run: go test ./... -v
