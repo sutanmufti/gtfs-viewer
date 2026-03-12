@@ -25,6 +25,14 @@ http://localhost:8080/?api_key=YOUR_MAPBOX_TOKEN
 
 Use the upload button in the UI to load a GTFS zip file. Once uploaded, select it from the list and explore stops, routes, and trips on the map.
 
+---
+
+![](./p1.png)
+
+---
+
+![](./p2.png)
+
 ## Features
 
 - Upload and manage multiple GTFS zip files
