@@ -7,6 +7,23 @@
 
 A Go/Gin web application for visualising [GTFS](https://gtfs.org/) (General Transit Feed Specification) data on an interactive map.
 
+## Quick Start
+
+**1. Run the server**
+
+```sh
+./gtfs-viewer
+```
+
+**2. Open the app in your browser with your Mapbox token**
+
+```
+http://localhost:8080/?api_key=YOUR_MAPBOX_TOKEN
+```
+
+**3. Upload a GTFS zip and start exploring**
+
+Use the upload button in the UI to load a GTFS zip file. Once uploaded, select it from the list and explore stops, routes, and trips on the map.
 
 ## Features
 
