@@ -1,5 +1,5 @@
 # Changelog
 
-## v1.0.0
+## v0.1.2
 
-First release.
+Licence update.
